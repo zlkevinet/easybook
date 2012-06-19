@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.easyhome.ebook"
+    android:versionCode="1"
+    android:versionName="1.0">
+
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="4" android:maxSdkVersion="15"/>
+
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.INTERNET" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.READ_LOGS" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" >
+    </uses-permission>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    
+
+    <application
+        android:icon="@drawable/icon"
+        android:label="@string/app_name" >
+        <activity
+            android:name=".EbookActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".SettingFont"
+            android:theme="@style/Transparent" >
+        </activity>
+        <activity
+            android:name=".SettingBackColor"
+            android:theme="@style/Transparent" >
+        </activity>
+
+		<meta-data 
+			android:name="APP_ID"
+			android:value="78E48DF6309C23E96AAF3740973A8A73" />
+		<meta-data
+			android:name="APP_INTERVAL"
+			android:value="20" />
+		<meta-data android:name="APP_CHANNEL"
+		    android:value="BLSNRJ201205281"/>
+
+        <meta-data
+            android:name="UMENG_APPKEY"
+            android:value="4fd01de35270154d4a000049" />
+        <meta-data
+            android:name="UMENG_CHANNEL"
+            android:value="BLSNRJ201205281" />
+    </application>
+
+</manifest>

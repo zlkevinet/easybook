@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="android_project" default="deploy" basedir=".">
+	<property file="build.properties" />
+	<property file="channels.properties" />
+	<property name="outdir" value="${project.outdir}" />
+	<property name="targetdir" value="${project.target}" />
+	<property environment="env" />
+	<property name="JAVA_HOME" value="${env.JAVA_HOME}">
+	</property>
+
+	<tstamp prefix="timeStamp">
+		<format property="day" pattern="yyyyMMdd" />
+		<format property="time" pattern="HH:mm:ss" />
+		<format property="date" pattern="yyyy-MM-dd_HH-mm-ss.SSS" />
+	</tstamp>
+
+	<!--添加支持循环lib-->
+	<taskdef resource="net/sf/antcontrib/antcontrib.properties">
+		<classpath>
+			<pathelement location="lib/ant-contrib-1.0b3.jar" />
+		</classpath>
+	</taskdef>
+
+
+	<!-- Create the output directories if they don't exist yet. -->
+	<target name="dirs">
+		<echo>del and creating output directories if needed...</echo>
+		<delete dir="${outdir}" />
+		<mkdir dir="${outdir}" />
+		<echo> outdir is :  ${outdir} </echo>
+	</target>
+
+	<!-- Generate the R.java file for this project's resources. -->
+	<target name="resource-src" depends="dirs">
+		<echo>Generating R.java from the resources...</echo>
+		<exec executable="${android-aapt}" failonerror="true">
+			<arg value="package" />
+			<arg value="-f" />
+			<arg value="-m" />
+			<arg value="-J" />
+			<arg value="${project.home}/src" />
+			<arg value="-M" />
+			<arg value="${project.home}/AndroidManifest.xml" />
+			<arg value="-S" />
+			<arg value="${resource-dir}" />
+			<arg value="-I" />
+			<arg value="${android-jar}" />
+		</exec>
+	</target>
+
+	<!-- Compile this project's .java files into .class files. -->
+	<target name="compile" depends="dirs, resource-src">
+		<javac 
+			encoding="utf-8" 
+			debug="true" 
+			extdirs="" 
+			srcdir="${project.home}/src" 
+			destdir="${outdir}" 
+			bootclasspath="${android-jar}" 
+			includeantruntime="on">
+			<classpath>
+				<fileset dir="${external-libs}" includes="*.jar" />
+				<fileset dir="${external-map-libs}" includes="*.jar" />
+			</classpath>
+		</javac>
+	</target>
+
+	<!-- Convert this project's .class files into .dex files. -->
+	<target name="dex" depends="compile">
+		<echo>Converting compiled files and external libraries into ${intermediate-dex-location}...</echo>
+		<apply executable="${android-dx}" failonerror="true" parallel="true">
+			<arg value="--dex" />
+			<arg value="--output=${intermediate-dex-location}" />
+			<arg path="${project.outdir}" />
+			<fileset dir="${external-libs}" includes="*.jar" />
+		</apply>
+	</target>
+
+	<!-- Put the project's resources into the output package file. -->
+	<target name="package-res-and-assets">
+		<echo>Packaging resources and assets...</echo>
+		<exec executable="${android-aapt}" failonerror="true">
+			<arg value="package" />
+			<arg value="-f" />
+			<arg value="-M" />
+			<arg value="${project.home}/AndroidManifest.xml" />
+			<arg value="-S" />
+			<arg value="${resource-dir}" />
+			<arg value="-A" />
+			<arg value="${asset-dir}" />
+			<arg value="-I" />
+			<arg value="${android-jar}" />
+			<arg value="-F" />
+			<arg value="${resources-package}" />
+		</exec>
+	</target>
+
+	<!-- Package the application without signing it.
+	    	 This allows for the application to be signed later with an official publishing key. -->
+	<target name="release" depends="dex, package-res-and-assets">
+		<echo>Packaging for release...</echo>
+		<exec executable="${android-builder}" failonerror="true">
+			<arg value="${outdir}/${project.name}-unsigned.apk" />
+			<arg value="-u" />
+			<arg value="-z" />
+			<arg value="${resources-package}" />
+			<arg value="-f" />
+			<arg value="${intermediate-dex-location}" />
+			<arg value="-rf" />
+			<arg value="${project.home}/src" />
+			<arg value="-rj" />
+			<arg value="${external-libs}" />
+			<arg value="-nf" />
+			<arg value="${external-libs}" />
+		</exec>
+		<echo>It will need to be signed with jarsigner before being published.</echo>
+	</target>
+
+	<!--进行签名-->
+	<target name="jarsigner" depends="release">
+		<exec executable="${jarsigner}" failonerror="true">
+			<arg value="-verbose" />
+			<arg value="-storepass" />
+			<arg value="${keystore.password}" />
+			<arg value="-keystore" />
+			<arg value="${keystore.file}" />
+			<arg value="-signedjar" />
+			<arg value="${outdir}/${project.name}${timeStamp.date}_build_signed.apk" />
+			<arg value="${outdir}/${project.name}-unsigned.apk" />
+			<arg value="${key.alias}" />
+		</exec>
+	</target>
+
+	<!--进行优化-->
+	<target name="zipalign" depends="jarsigner">
+		<exec executable="${android-zipalign}" failonerror="true">
+			<arg value="-v" />
+			<arg value="-f" />
+			<arg value="4" />
+			<arg value="${outdir}/${project.name}${timeStamp.date}_build_signed.apk" />
+			<arg value="${outdir}/${project.name}${timeStamp.date}_build_qa.apk" />
+		</exec>
+	</target>
+
+	<!--删除无用apk-->
+	<target name="delete" depends="zipalign">
+		<echo>del unneed apk...</echo>
+		<delete file="${outdir}/${project.name}-unsigned.apk" />
+		<delete file="${outdir}/${project.name}${timeStamp.date}_build_signed.apk" />
+	</target>
+
+	<!--执行-->
+	<target name="startbuild" depends="delete">
+		<echo message="auto apk finish!" />
+	</target>
+
+	<!--批量调用执行-->
+	<target name="deploy">
+		<echo>del and creating target directories if needed...</echo>
+		<delete dir="${targetdir}" />
+		<mkdir dir="${targetdir}" />
+		<echo> outdir is :  ${targetdir} </echo>
+		<foreach target="modify_manifest" list="${market_channels}" param="channel" delimiter=",">
+		</foreach>
+	</target>
+
+	<target name="install">
+		<exec executable="${android-adb}" failonerror="true">
+			<arg value="uninstall"/>
+			<arg value="com.ebook"/>
+		</exec>
+		<exec executable="${android-adb}" failonerror="true">
+			<arg value="install"/>
+			<arg value="${outdir}/${project.name}${timeStamp.date}_build_qa.apk"/>
+		</exec>
+	</target>
+
+	<!--修改manifest渠道号-->
+	<target name="modify_manifest">
+		<!--根据默认渠道号，修改当前渠道号-->
+		<replaceregexp byline="true">
+			<regexp pattern="android:value=&quot;default_channel&quot;" />
+			<substitution expression="android:value=&quot;${channel}&quot;" />
+			<fileset dir="" includes="AndroidManifest.xml" />
+		</replaceregexp>
+		<echo message="${channel}" />
+		<antcall target="startbuild" />
+		<!--移动到目标路径-->
+		<move file="${outdir}/${project.name}${timeStamp.date}_build_qa.apk" tofile="${targetdir}/${project.name}${timeStamp.date}_build_${channel}.apk" />
+		<!--改为默认渠道号-->
+		<replaceregexp byline="true">
+			<regexp pattern="android:value=&quot;${channel}&quot;" />
+			<substitution expression="android:value=&quot;default_channel&quot;" />
+			<fileset dir="" includes="AndroidManifest.xml" />
+		</replaceregexp>
+	</target>
+
+	<target name="test" depends="startbuild">
+		<antcall target="install"/>
+	</target>
+
+</project>

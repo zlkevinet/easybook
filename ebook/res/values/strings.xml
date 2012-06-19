@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+
+    <string name="btn_ok">确定</string>
+    <string name="app_name">乔布斯传记</string>
+    <string name="open_failed_msg">打开文件失败！</string>
+    <string name="font_size">字体大小</string>
+    <string name="back_color">背景颜色</string>
+    <string name="page_slide">快速定位</string>
+    <string name="white">白天</string>
+    <string name="black">黑夜</string>
+
+</resources>
