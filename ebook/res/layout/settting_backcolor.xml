@@ -19,9 +19,9 @@
         android:layout_width="fill_parent"
         android:layout_height="60dip"
         android:textSize="20sp"
-        android:background="#6A6A6A"
+        android:background="#5A5A5A"
         android:gravity="center"
-        android:textColor="#000000"
+        android:textColor="#FFFFFF"
         android:text="@string/black" />
 
 </LinearLayout>

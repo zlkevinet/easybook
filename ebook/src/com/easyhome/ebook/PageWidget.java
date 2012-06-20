@@ -112,25 +112,32 @@ public class PageWidget extends View {
 
     public boolean doTouchEvent(MotionEvent event) {
         if (event.getAction() == MotionEvent.ACTION_MOVE) {
-            mTouch.x = event.getX();
-            mTouch.y = event.getY();
+            setStartPos(event.getX(), event.getY());
             this.postInvalidate();
         }
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            mTouch.x = event.getX();
-            mTouch.y = event.getY();
+            setStartPos(event.getX(), event.getY());
         }
         if (event.getAction() == MotionEvent.ACTION_UP) {
-            if (canDragOver()) {
-                startAnimation(1200);
-            } else {
-                mTouch.x = mCornerX - 0.09f;
-                mTouch.y = mCornerY - 0.09f;
-            }
-
-            this.postInvalidate();
+            pageActionWithAnimation();
         }
         return true;
+    }
+
+    public void setStartPos(float x, float y) {
+        mTouch.x = x;
+        mTouch.y = y;
+    }
+
+    public void pageActionWithAnimation() {
+        if (canDragOver()) {
+            startAnimation(1200);
+        } else {
+            mTouch.x = mCornerX - 0.09f;
+            mTouch.y = mCornerY - 0.09f;
+        }
+
+        this.postInvalidate();
     }
 
     public PointF getCross(PointF P1, PointF P2, PointF P3, PointF P4) {

@@ -21,6 +21,11 @@ import android.graphics.Paint.Align;
 import android.preference.PreferenceManager;
 
 public class BookPageFactory {
+    private final static int DEFAULT_BACK_COLOR = Color.WHITE;
+    private final static int DEFAULT_FONT_COLOR = Color.BLACK;
+    private final static int DEFAULT_FONT_SIZE = 26;
+    private final static int DEFAULT_MARGIN_WIDTH = 15;
+    private final static int DEFAULT_MARGIN_HEIGHT = 20;
 
     private File book_file;
     private MappedByteBuffer m_mbBuf;
@@ -32,11 +37,11 @@ public class BookPageFactory {
     private int mWidth;
     private int mHeight;
     private Vector<String> m_lines = new Vector<String>();
-    private int m_fontSize = 26;
-    private int m_textColor = Color.BLACK;
-    private int m_backColor = 0xffff9e85;
-    private int marginWidth = 15;
-    private int marginHeight = 20;
+    private int m_fontSize;
+    private int m_textColor;
+    private int m_backColor;
+    private int marginWidth = DEFAULT_MARGIN_WIDTH;
+    private int marginHeight = DEFAULT_MARGIN_HEIGHT;
     private int mLineCount;
     private float mVisibleHeight;
     private float mVisibleWidth;
@@ -50,13 +55,12 @@ public class BookPageFactory {
 
     public BookPageFactory(int w, int h, Context context) {
         mContext = context;
-        sharedPreferences = PreferenceManager
-                .getDefaultSharedPreferences(mContext);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
         mWidth = w;
         mHeight = h - sharedPreferences.getInt("PaddingButtom", 0);;
-        m_fontSize = sharedPreferences.getInt("font_size", 26);
-        m_textColor = sharedPreferences.getInt("font_color", Color.BLACK);
-        m_backColor = sharedPreferences.getInt("back_color", 0xffff9e85);
+        m_fontSize = sharedPreferences.getInt("font_size", DEFAULT_FONT_SIZE);
+        m_textColor = sharedPreferences.getInt("font_color", DEFAULT_FONT_COLOR);
+        m_backColor = sharedPreferences.getInt("back_color", DEFAULT_BACK_COLOR);
         mPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         mPaint.setTextAlign(Align.LEFT);
         mPaint.setTextSize(m_fontSize);

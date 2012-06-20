@@ -15,7 +15,9 @@ import android.graphics.Canvas;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -50,7 +52,7 @@ public class EbookActivity extends Activity {
 
     private ViewGroup viewGroup;
 
-    private static final String SOURCE_FILE_NAME = "temp.txt";
+    private static final String SOURCE_FILE_NAME = "book.txt";
 
     /** Called when the activity is first created. */
     @Override
@@ -194,6 +196,76 @@ public class EbookActivity extends Activity {
     public void onPause() {
         super.onPause();
         MobclickAgent.onPause(this);
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        
+        Log.e(TAG, "keycode = " + keyCode);
+        
+        if(keyCode==KeyEvent.KEYCODE_VOLUME_DOWN){
+            
+            if(pagefactory != null){
+                mPageWidget.abortAnimation();
+                mPageWidget.calcCornerXY(mScreenWidth * 3 / 4, mScreenWidth / 4);
+                mPageWidget.setStartPos(mScreenWidth * 3 / 4, mScreenWidth / 4);
+                pagefactory.onDraw(mCurPageCanvas);
+                if (mPageWidget.DragToRight()) {
+                    try {
+                        pagefactory.prePage();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    if (pagefactory.isfirstPage())
+                        return true;
+                    pagefactory.onDraw(mNextPageCanvas);
+                } else {
+                    try {
+                        pagefactory.nextPage();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    if (pagefactory.islastPage()) {
+                        return true;
+                    }
+                    pagefactory.onDraw(mNextPageCanvas);
+                }
+                mPageWidget.setBitmaps(mCurPageBitmap, mNextPageBitmap);
+                mPageWidget.pageActionWithAnimation();
+                return true;
+            }
+        }else if(keyCode==KeyEvent.KEYCODE_VOLUME_UP){
+            if(pagefactory != null){
+                mPageWidget.abortAnimation();
+                mPageWidget.calcCornerXY(mScreenWidth  / 4, mScreenWidth / 4);
+                mPageWidget.setStartPos(mScreenWidth / 4, mScreenWidth / 4);
+                pagefactory.onDraw(mCurPageCanvas);
+                if (mPageWidget.DragToRight()) {
+                    try {
+                        pagefactory.prePage();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    if (pagefactory.isfirstPage())
+                        return true;
+                    pagefactory.onDraw(mNextPageCanvas);
+                } else {
+                    try {
+                        pagefactory.nextPage();
+                    } catch (IOException e1) {
+                        e1.printStackTrace();
+                    }
+                    if (pagefactory.islastPage()) {
+                        return true;
+                    }
+                    pagefactory.onDraw(mNextPageCanvas);
+                }
+                mPageWidget.setBitmaps(mCurPageBitmap, mNextPageBitmap);
+                mPageWidget.pageActionWithAnimation();
+                return true;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
     }
 
     private void getDisplay() {

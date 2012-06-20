@@ -14,7 +14,6 @@ import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
-import com.easyhome.ebook.R;
 
 public class SettingFont extends Activity {
     private TextView textShow;
@@ -53,31 +52,36 @@ public class SettingFont extends Activity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-
             }
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // TODO Auto-generated method stub
-                textShow.setText(progress + "");
-                textShow.setTextSize(progress);
+                
+                final int fontSize = getValidateProgress(progress);
+                textShow.setText(fontSize + "");
+                textShow.setTextSize(fontSize);
+                
             }
         });
 
         int progress = sharedPreferences.getInt("font_size", 26);
+        
         textShow.setText(progress + "");
         textShow.setTextSize(progress);
-        seekBar.setProgress(progress);
+        
+        seekBar.setProgress(getInValidateProgress(progress));
     }
     
     private int getValidateProgress(int progress){
-        return progress + 8;
+        return progress + 10;
     }
+    
+    private int getInValidateProgress(int progress){
+        return progress - 10;
+    }
+    
 }
