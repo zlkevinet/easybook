@@ -1,14 +1,10 @@
 
 package com.easyhome.ebook;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import com.mobclick.android.MobclickAgent;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -19,38 +15,42 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.PopupWindow;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.mobclick.android.MobclickAgent;
-import com.easyhome.ebook.R;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class EbookActivity extends Activity {
 
     public static final String TAG = "EbookActivity";
-    public static final int OPTION_MENU_SETTING_FONT_SIZE = 0;
-    public static final int OPTION_MENU_SETTING_BACK_COLOR = 1;
-    public static final int OPTION_MENU_PAGE_SLIDE = 2;
     private PageWidget mPageWidget;
     Bitmap mCurPageBitmap, mNextPageBitmap;
     Canvas mCurPageCanvas, mNextPageCanvas;
+    
     BookPageFactory pagefactory;
 
     private int mScreenWidth;
     private int mScreenHeight;
 
     private ViewGroup viewGroup;
+    
+    private PopupWindow topWindow;
+    private PopupWindow dockWindow;
+    protected SharedPreferences sharedPreferences;
 
     private static final String SOURCE_FILE_NAME = "book.txt";
 
@@ -61,11 +61,12 @@ public class EbookActivity extends Activity {
         // umeng自动更新
         MobclickAgent.update(this);
         MobclickAgent.setUpdateOnlyWifi(false);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         removePaddingButtom();
         getDisplay();
         setWindowStyle();
-
+        
         mCurPageBitmap = Bitmap.createBitmap(mScreenWidth, mScreenHeight,
                 Bitmap.Config.ARGB_8888);
         mNextPageBitmap = Bitmap.createBitmap(mScreenWidth, mScreenHeight,
@@ -76,12 +77,13 @@ public class EbookActivity extends Activity {
 
         mPageWidget.setBitmaps(mCurPageBitmap, mCurPageBitmap);
         mPageWidget.setOnTouchListener(pageWidgetOnTouchLsn());
+        
+        pagefactory = new BookPageFactory(mScreenWidth, mScreenHeight, this);
+        initPopupWindow();
     }
 
     private void removePaddingButtom() {
-        // TODO Auto-generated method stub
-        Editor editor = PreferenceManager
-                .getDefaultSharedPreferences(this).edit();
+        Editor editor = sharedPreferences.edit();
         editor.remove("PaddingButtom");
         editor.commit();
     }
@@ -264,6 +266,9 @@ public class EbookActivity extends Activity {
                 mPageWidget.pageActionWithAnimation();
                 return true;
             }
+        } else if(keyCode == KeyEvent.KEYCODE_MENU){
+            showOperatorWindow();
+            return true;
         }
         return super.onKeyDown(keyCode, event);
     }
@@ -275,52 +280,39 @@ public class EbookActivity extends Activity {
         mScreenHeight = dm.heightPixels;
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // TODO Auto-generated method stub
-        menu.add(0, OPTION_MENU_SETTING_FONT_SIZE, 0, getString(R.string.font_size));
-        menu.add(0, OPTION_MENU_SETTING_BACK_COLOR, 0, getString(R.string.back_color));
-        menu.add(0, OPTION_MENU_PAGE_SLIDE, 0, getString(R.string.page_slide));
-        return super.onCreateOptionsMenu(menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // TODO Auto-generated method stub
-        switch (item.getItemId()) {
-            case OPTION_MENU_SETTING_FONT_SIZE:
-                Intent intent = new Intent(this, SettingFont.class);
-                startActivity(intent);
-                break;
-            case OPTION_MENU_SETTING_BACK_COLOR:
-                Intent intent1 = new Intent(this, SettingBackColor.class);
-                startActivity(intent1);
-                break;
-            case OPTION_MENU_PAGE_SLIDE:
-                initPopupWindow();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
 
     private void initPopupWindow() {
-        // TODO Auto-generated method stub
-        PopupWindow popup = new PopupWindow(EbookActivity.this);
+        // TODO ADD TOP MENU WINDOW
+//        topWindow = new PopupWindow(this);
+//        topWindow.setContentView(getTopPopupView());
+//        topWindow.setFocusable(true);
+//        topWindow.setBackgroundDrawable(getResources().getDrawable(R.drawable.page_slide_bg));
+//        dockWindow.setWidth(mScreenWidth);
+//        dockWindow.setHeight(120);
+        
+        dockWindow = new PopupWindow(this);
+        dockWindow.setContentView(getDockPopupView());
+        dockWindow.setFocusable(true);
+        dockWindow.setBackgroundDrawable(getResources().getDrawable(R.drawable.page_slide_bg));
+        dockWindow.setWidth(mScreenWidth);
+        dockWindow.setHeight(200);
 
-        popup.setContentView(getPopupView());
-
-        popup.setFocusable(true);
-
-        popup.setBackgroundDrawable(getResources().getDrawable(R.drawable.page_slide_bg));
-
-        popup.setWidth(mScreenWidth);
-
-        popup.setHeight(120);
-
-        popup.showAtLocation(mPageWidget, Gravity.BOTTOM, 0, 0);
     }
 
-    private View getPopupView() {
+    private View getTopPopupView() {
+        return null;
+    }
+
+    private void showOperatorWindow(){
+        
+        if(!dockWindow.isShowing()){
+            dockWindow.showAtLocation(mPageWidget, Gravity.BOTTOM, 0, 0);
+        }else{
+            dockWindow.dismiss();
+        }
+    }
+    
+    private View getDockPopupView() {
         LayoutInflater layoutInflater = LayoutInflater.from(this);
         View popView = layoutInflater.inflate(R.layout.page_slide, null);
 
@@ -333,7 +325,6 @@ public class EbookActivity extends Activity {
 
             @Override
             public void onStopTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
                 pagefactory.setmPercent(seekBar.getProgress());
                 goOnShowDraw();
                 try {
@@ -341,34 +332,68 @@ public class EbookActivity extends Activity {
                     pagefactory.prePage();
                     pagefactory.onDraw(mCurPageCanvas);
                 } catch (IOException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
 
             @Override
             public void onStartTrackingTouch(SeekBar seekBar) {
-                // TODO Auto-generated method stub
-
             }
 
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                // TODO Auto-generated method stub
                 textView.setText(progress + "%");
             }
         });
 
+        Button smaller = (Button) popView.findViewById(R.id.font_size_smaller);
+        smaller.setOnClickListener(new View.OnClickListener() {
+            
+            @Override
+            public void onClick(View v) {
+                pagefactory.reduceFontSize();
+                goOnShowDraw();
+            }
+        });
+        
+        Button larger = (Button) popView.findViewById(R.id.font_size_larger);
+        larger.setOnClickListener(new View.OnClickListener() {
+            
+            @Override
+            public void onClick(View v) {
+                pagefactory.increaseFontSize();
+                goOnShowDraw();
+            }
+        });
+        
+        Button whiteBack = (Button) popView.findViewById(R.id.back_color_white);
+        whiteBack.setOnClickListener(new View.OnClickListener() {
+            
+            @Override
+            public void onClick(View v) {
+                pagefactory.setWhiteOrBlackBack(true);
+                goOnShowDraw();
+            }
+        });
+        Button blackBack = (Button) popView.findViewById(R.id.back_color_black);
+        blackBack.setOnClickListener(new View.OnClickListener() {
+            
+            @Override
+            public void onClick(View v) {
+                pagefactory.setWhiteOrBlackBack(false);
+                goOnShowDraw();
+            }
+        });
+        
+        
         return popView;
     }
 
     private void goOnShowDraw() {
-        // TODO Auto-generated method stub
         mPageWidget.setBitmaps(mCurPageBitmap, mCurPageBitmap);
         // setContentView(mPageWidget);
         viewGroup.removeView(mPageWidget);
         viewGroup.addView(mPageWidget);
-
         pagefactory = new BookPageFactory(mScreenWidth, mScreenHeight, this);
         // Bitmap bm = null;
         // pagefactory.setBgBitmap(bm);
@@ -381,5 +406,6 @@ public class EbookActivity extends Activity {
                     .show();
             e.printStackTrace();
         }
+        
     }
 }

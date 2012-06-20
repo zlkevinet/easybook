@@ -45,7 +45,9 @@ public class PageWidget extends View {
     ColorMatrixColorFilter mColorMatrixFilter;
     Matrix mMatrix;
     float[] mMatrixArray = {
-            0, 0, 0, 0, 0, 0, 0, 0, 1.0f
+            0, 0, 0, 
+            0, 0, 0, 
+            0, 0, 1.0f
     };
 
     boolean mIsRTandLB;

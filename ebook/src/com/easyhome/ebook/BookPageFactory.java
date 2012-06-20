@@ -186,7 +186,6 @@ public class BookPageFactory {
             try {
                 strParagraph = new String(paraBuf, m_strCharsetName);
             } catch (UnsupportedEncodingException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             String strReturn = "";
@@ -215,7 +214,6 @@ public class BookPageFactory {
                     m_mbBufEnd -= (strParagraph + strReturn)
                             .getBytes(m_strCharsetName).length;
                 } catch (UnsupportedEncodingException e) {
-                    // TODO Auto-generated catch block
                     e.printStackTrace();
                 }
             }
@@ -236,7 +234,6 @@ public class BookPageFactory {
             try {
                 strParagraph = new String(paraBuf, m_strCharsetName);
             } catch (UnsupportedEncodingException e) {
-                // TODO Auto-generated catch block
                 e.printStackTrace();
             }
             strParagraph = strParagraph.replaceAll("\r\n", "");
@@ -276,6 +273,10 @@ public class BookPageFactory {
         m_lines.clear();
         pageUp();
         m_lines = pageDown();
+        
+        Editor edit = sharedPreferences.edit();
+        edit.putInt("Begin", m_mbBufBegin);
+        edit.commit();
     }
 
     public void nextPage() throws IOException {
@@ -288,6 +289,10 @@ public class BookPageFactory {
         m_lines.clear();
         m_mbBufBegin = m_mbBufEnd;
         m_lines = pageDown();
+        
+        Editor edit = sharedPreferences.edit();
+        edit.putInt("Begin", m_mbBufBegin);
+        edit.commit();
     }
 
     public void onDraw(Canvas c) {
@@ -311,9 +316,6 @@ public class BookPageFactory {
         String strPercent = df.format(fPercent * 100) + "%";
         int nPercentWidth = (int) mPaint.measureText("999.9%") + 1;
         c.drawText(strPercent, mWidth - nPercentWidth, mHeight, mPaint);
-        Editor edit = sharedPreferences.edit();
-        edit.putInt("Begin", m_mbBufBegin);
-        edit.commit();
     }
 
     public int getmPercent() {
@@ -344,5 +346,45 @@ public class BookPageFactory {
 
     public boolean islastPage() {
         return m_islastPage;
+    }
+    
+    public void increaseFontSize(){
+        m_fontSize += 5;
+        if(m_fontSize < 10){
+            m_fontSize = 10; 
+        } else if(m_fontSize > 30){
+            m_fontSize = 30;
+        }
+        
+        Editor edit = sharedPreferences.edit();
+        edit.putInt("font_size", m_fontSize);
+        edit.commit();
+    }
+    
+    public void reduceFontSize(){
+        m_fontSize -= 5;
+        
+        if(m_fontSize < 10){
+            m_fontSize = 10; 
+        } else if(m_fontSize > 30){
+            m_fontSize = 30;
+        }
+        
+        Editor edit = sharedPreferences.edit();
+        edit.putInt("font_size", m_fontSize);
+        edit.commit();
+    }
+    
+    public void setWhiteOrBlackBack(boolean isWhite){
+        Editor edit = sharedPreferences.edit();
+        if(isWhite){
+            edit.putInt("back_color", 0xffffffff);
+            edit.putInt("font_color", 0xff000000);
+            edit.commit();
+        }else{
+            edit.putInt("back_color", 0xff5a5a5a);
+            edit.putInt("font_color", 0xffffffff);
+            edit.commit();
+        }
     }
 }
